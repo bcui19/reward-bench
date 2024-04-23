@@ -21,6 +21,8 @@ import time as time
 
 import anthropic
 import openai
+import requests
+import json
 from fastchat.conversation import get_conv_template
 from openai import OpenAI
 
@@ -108,7 +110,7 @@ MTBENCH_MULTI_V2 = {
 
 
 # noqa adapted from FastChat https://github.com/lm-sys/FastChat/blob/b015f21cb9d0cf3c87d2a5e53008074c537e8be0/fastchat/llm_judge/common.py#L235C1-L312C1
-def run_judge_pair(question, answer_a, answer_b, model, multi_turn=False):
+def run_judge_pair(question, answer_a, answer_b, model, tokenizer, multi_turn=False):
     kwargs = {}
 
     if multi_turn:
@@ -152,6 +154,21 @@ def run_judge_pair(question, answer_a, answer_b, model, multi_turn=False):
         conv.messages = conv.to_openai_api_messages()
 
         judgment = chat_completion_anthropic(model, conv, temperature=0, max_tokens=1024)
+    elif "http://" in model:
+        token_ids_a = tokenizer.apply_chat_template(answer_a) + [tokenizer.eos_token_id]
+        token_ids_b = tokenizer.apply_chat_template(answer_b) + [tokenizer.eos_token_id]
+
+        rews_a = pairwise_reward_model_inf(model, token_ids_a)[0]
+        rews_b = pairwise_reward_model_inf(model, token_ids_b)[0]
+
+        winner = None
+        if rews_a > rews_b:
+            winner = "A"
+        else:
+            winner = "B"
+
+        return winner, user_prompt, (rews_a, rews_b)
+
     else:
         raise ValueError(f"Model {model} not supported")
 
@@ -162,6 +179,45 @@ def run_judge_pair(question, answer_a, answer_b, model, multi_turn=False):
     else:
         winner = "error"
     return winner, user_prompt, judgment
+
+
+def pairwise_reward_model_inf(url, input_ids):
+    custom_input = [{
+        'input_ids': input_ids,
+    }]
+
+    headers = {"Authorization": os.environ['MOSAICML_API_KEY'],
+               "Content-Type": "application/json"}
+
+    request = {'custom_input': custom_input, 'prompt': ''}
+    inf_data = json.dumps(request)
+
+    response = requests.post(f'{url}',
+                                headers=headers,
+                                data=inf_data,
+                                timeout=360)
+
+    # print ("response is: ", response)
+
+    if response.status_code == 400 and 'Please reduce the length of your prompt.' in response.text:
+        return None
+    elif response.status_code != 200:
+        if retries_left > 0:
+            # print("Retrying...")
+            # sleep for longer each retry
+            time.sleep(5 * (6 - retries_left))
+            return get_response_batch(input_ids, retries_left=retries_left - 1)
+        else:
+            raise Exception('Too many retries')
+    else:
+        response = response.json()
+        # print("REWARD CALL", response)
+
+        final_rewards = []
+        for choice in response['choices']:
+            final_reward = choice['metadata']['rewards'][-1]
+            final_rewards.append(final_reward)
+        return final_rewards
 
 
 # also uses ArenaHard code

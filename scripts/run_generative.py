@@ -30,6 +30,7 @@ from rewardbench import load_eval_dataset, save_to_hub
 from rewardbench.constants import EXAMPLE_COUNTS, SUBSET_MAPPING
 from rewardbench.generative import run_judge_pair
 from rewardbench.utils import calculate_scores_per_section
+from transformers import AutoTokenizer
 
 # get token from HF_TOKEN env variable, but if it doesn't exist pass none
 HF_TOKEN = os.getenv("HF_TOKEN", None)
@@ -118,7 +119,7 @@ def main():
         sys.stdout.write("\r[{}{}] {}/{}".format("#" * progress, "." * (50 - progress), done, total))
         sys.stdout.flush()
 
-    def get_judgement(batch, debug=args.debug):
+    def get_judgement(batch, tokenizer, debug=args.debug):
         mult_turn = True if len(batch["text_chosen"]) > 2 else False
         prompt = batch["text_chosen"][0]["content"]
         answer_a = batch["text_chosen"]
@@ -135,7 +136,7 @@ def main():
             loser_text = "B"
 
         if len(batch["text_chosen"]) <= 4:  # set up only for 1 or 2 turns
-            winner, request, judgement = run_judge_pair(prompt, answer_a, answer_b, args.model, multi_turn=mult_turn)
+            winner, request, judgement = run_judge_pair(prompt, answer_a, answer_b, args.model, tokenizer, multi_turn=mult_turn)
             if debug:
                 print(f"Prompt: {request}")
                 print(f"Judgement: {judgement}")
@@ -158,7 +159,13 @@ def main():
 
         with ThreadPoolExecutor(max_workers=args.num_threads) as executor:
             # Submit all tasks and hold their futures in a list
-            future_to_index = {executor.submit(get_judgement, x): i for i, x in enumerate(dataset)}
+
+            tokenizer = AutoTokenizer.from_pretrained('rajammanabrolu/gpt-4-chat', trust_remote_code=True)
+            future_to_index = {executor.submit(get_judgement, x, tokenizer): i for i, x in enumerate(dataset)}
+
+            # for i, x in enumerate(dataset):
+                # get_judgement(x, tokenizer)
+
 
             # As tasks complete, update progress and store results in the original order
             for future in as_completed(future_to_index):
@@ -232,12 +239,12 @@ def main():
     ############################
     # Upload results to hub
     # ############################
-    sub_path = "eval-set/" if not args.pref_sets else "pref-sets/"
-    results_url = save_to_hub(
-        results_grouped, args.model, sub_path, args.debug, local_only=args.do_not_save, save_metrics_for_beaker=True
-    )
-    if not args.do_not_save:
-        logger.info(f"Uploaded reward model results to {results_url}")
+    # sub_path = "eval-set/" if not args.pref_sets else "pref-sets/"
+    # results_url = save_to_hub(
+    #     results_grouped, args.model, sub_path, args.debug, local_only=args.do_not_save, save_metrics_for_beaker=True
+    # )
+    # if not args.do_not_save:
+    #     logger.info(f"Uploaded reward model results to {results_url}")
 
     logger.info("Not uploading chosen-rejected text with scores due to model compatibility")
 
