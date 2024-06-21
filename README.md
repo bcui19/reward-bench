@@ -9,6 +9,14 @@
 </p>
   <img width="1280" alt="Github RewardBench Logo" src="https://github.com/allenai/reward-bench/assets/10695622/39b213ba-9971-4338-b5f9-8e042d22d8fc" style="margin-left:'auto' margin-right:'auto' display:'block' "/>
 </div>
+<p align="center">
+  <a href="https://github.com/allenai/reward-bench/blob/main/LICENSE">
+    <img alt="GitHub License" src="https://img.shields.io/github/license/allenai/reward-bench">
+  </a>
+  <a href="https://pypi.org/project/rewardbench/">
+    <img alt="PyPI" src="https://img.shields.io/pypi/v/rewardbench">
+  </a>
+</p>
 
 
 ---
@@ -24,8 +32,47 @@ The two primary scripts to generate results (more in `scripts/`):
 2. `scripts/run_dpo.py`: Run evaluations for direct preference optimization (DPO) models (and other models using implicit rewards, such as KTO).
 3. `scripts/train_rm.py`: A basic RM training script built on [TRL](https://github.com/huggingface/trl).
 
-## Installation
-Please install `torch` on your system, and then install the following requirements.
+## Quick Usage
+RewardBench let's you quickly evaluate any reward model on any preference set. 
+To install for quick usage, install with pip as:
+```
+pip install rewardbench
+```
+Then, run a following:
+```
+rewardbench --model={yourmodel} --dataset={yourdataset} --batch_size=8
+```
+For a DPO model, pass --ref_model={} and the script will automatically route there.
+Automatically uses Tokenizers chat templates, but can also use fastchat conv templates.
+
+To run the core Reward Bench evaluation set, run:
+```
+rewardbench --model={yourmodel}
+```
+
+Examples:
+1. Normal operation
+```
+rewardbench --model=OpenAssistant/reward-model-deberta-v3-large-v2 --dataset=allenai/ultrafeedback_binarized_cleaned --split=test_gen --chat_template=raw
+```
+2. DPO model from local dataset (note `--load_json`)
+```
+rewardbench --model=Qwen/Qwen1.5-0.5B-Chat --ref_model=Qwen/Qwen1.5-0.5B --dataset=/net/nfs.cirrascale/allennlp/jacobm/herm/data/berkeley-nectar-binarized-preferences-random-rejected.jsonl --load_json
+```
+
+*Experimental*: Generative RMs can be run from the pip install by running:
+```
+pip install rewardbench[generative]
+```
+And then:
+```
+rewardbench-gen --model={}
+```
+For more information, see `scripts/run_generative.py`. 
+The extra requirement for local models is VLLM and the requesite API for API models (OpenAI, Anthropic, and Together are supported).
+
+## Full Installation
+To install from source, please install `torch` on your system, and then install the following requirements.
 ```
 pip install -e .
 ```
@@ -79,6 +126,32 @@ And for DPO:
 python scripts/run_dpo.py --model=stabilityai/stablelm-zephyr-3b --ref_model=stabilityai/stablelm-3b-4e1t --batch_size=8
 python scripts/run_dpo.py --model=stabilityai/stablelm-2-zephyr-1_6b --ref_model=stabilityai/stablelm-2-1_6b --batch_size=16
 ```
+
+## Ensembling RMs
+For reward models already in RewardBench, you can run an offline ensemble test to approximate using multiple reward models in your system. To try this, you can run:
+```
+python analysis/run_ensemble_offline.py --models sfairXC/FsfairX-LLaMA3-RM-v0.1 openbmb/Eurus-RM-7b Nexusflow/Starling-RM-34B
+```
+
+## Running Generative RMs (LLM-as-a-judge)
+Local and API models are supported. For example, run OpenAI's models like:
+```
+python scripts/run_generative.py --model=gpt-3.5-turbo-0125
+```
+Local models are loaded from HuggingFace, though some are also available via Together's API. Run Llama 3 locally with
+```
+python scripts/run_generative.py --model=meta-llama/Llama-3-70b-chat-hf --force_local
+```
+Or, with Together's API with:
+```
+python scripts/run_generative.py --model=meta-llama/Llama-3-70b-chat-hf
+```
+
+We are adding support for generative ensembles (only via API for now), run with:
+```
+python scripts/run_generative.py --model gpt-3.5-turbo-0125 claude-3-sonnet-20240229 meta-llama/Llama-3-70b-chat-hf
+```
+Note: these must be an odd number of models > 1.
 
 ## Creating Best of N (BoN) rankings
 
@@ -162,6 +235,9 @@ Notes: Do not use the character - in image names for beaker,
 When updating the `Dockerfile`, make sure to see the instructions at the top to update the base cuda version. 
 
 In development, we have the following docker images (most recent first as it's likely what you need).
+TODO: Update it so one image has VLLM (for generative RM only) and one without. Without will load much faster.
+- `nathanl/rb_v18`: Improvements to RewardBench CLI
+- `nathanl/rb_v17` (with VLLM): add support for vllm + llm as a judge, `rb_v16` is similar without prometheus and some OpenAI models
 - `nathanl/rb_v12`: add support for llama3
 - `nathanl/rewardbench_v10`: add support for `mightbe/Better-PairRM` via jinja2
 - `nathanl/rewardbench_v8`: add support for `openbmb/Eurus-RM-7b` and starcoder2

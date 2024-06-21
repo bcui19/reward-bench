@@ -175,6 +175,9 @@ def main():
     if reward_pipe.tokenizer.pad_token_id is None:
         reward_pipe.model.config.pad_token_id = reward_pipe.tokenizer.eos_token_id
         reward_pipe.tokenizer.pad_token_id = reward_pipe.tokenizer.eos_token_id
+    # For models whose config did not contains `pad_token_id`
+    if reward_pipe.model.config.pad_token_id is None:
+        reward_pipe.model.config.pad_token_id = reward_pipe.tokenizer.pad_token_id
 
     # if using fastchat template (no template in tokenizer), make the RM tokenizer output an EOS token
     if not check_tokenizer_chat_template(tokenizer):
@@ -221,7 +224,7 @@ def main():
             drop_last=False,
         )
 
-        dataloader, model = accelerator.prepare(dataloader, reward_pipe.model)
+        model = accelerator.prepare(reward_pipe.model)
         reward_pipe.model = model
 
         scores = []

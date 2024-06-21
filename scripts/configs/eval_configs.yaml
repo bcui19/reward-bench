@@ -485,10 +485,109 @@ openbmb/MiniCPM-2B-dpo-fp32:
   batch_size: 4
   trust_remote_code: True
   dpo: True
+# Note: way not want to re-run generative models all the time
+# meta-llama/Meta-Llama-3-8B-Instruct:
+#   model: meta-llama/Meta-Llama-3-8B-Instruct
+#   tokenizer: meta-llama/Meta-Llama-3-8B-Instruct
+#   chat_template: # none for tokenizer
+#   trust_remote_code: False
+#   num_gpus: 1
+#   generative: True
+#   dpo: False
+# meta-llama/Meta-Llama-3-70B-Instruct:
+#   model: meta-llama/Meta-Llama-3-70B-Instruct
+#   tokenizer: meta-llama/Meta-Llama-3-70B-Instruct
+#   chat_template: # none for tokenizer
+#   trust_remote_code: False
+#   num_gpus: 4
+#   generative: True
+#   dpo: False
+# CohereForAI/c4ai-command-r-plus:
+#   model: CohereForAI/c4ai-command-r-plus
+#   tokenizer: CohereForAI/c4ai-command-r-plus
+#   chat_template: # none for tokenizer
+#   trust_remote_code: False
+#   num_gpus: 4
+#   generative: True
+#   dpo: False
+# End generative reward models
 sfairXC/FsfairX-LLaMA3-RM-v0.1:
   model: sfairXC/FsfairX-LLaMA3-RM-v0.1
   tokenizer: sfairXC/FsfairX-LLaMA3-RM-v0.1
   chat_template: # none for tokenizer
   batch_size: 4
+  trust_remote_code: False
+  dpo: False
+RLHFlow/pair-preference-model-LLaMA3-8B:
+  model: RLHFlow/pair-preference-model-LLaMA3-8B
+  tokenizer: RLHFlow/pair-preference-model-LLaMA3-8B
+  chat_template: # none for tokenizer
+  batch_size: 4
+  trust_remote_code: False
+  dpo: False
+RLHFlow/RewardModel-Mistral-7B-for-DPA-v1:
+  model: RLHFlow/RewardModel-Mistral-7B-for-DPA-v1
+  tokenizer: RLHFlow/RewardModel-Mistral-7B-for-DPA-v1
+  chat_template: # none for tokenizer
+  batch_size: 4
+  trust_remote_code: True
+  dpo: False
+RLHFlow/LLaMA3-iterative-DPO-final:
+  model: RLHFlow/LLaMA3-iterative-DPO-final
+  ref_model: RLHFlow/LLaMA3-SFT
+  tokenizer: RLHFlow/LLaMA3-iterative-DPO-final
+  chat_template: # none for tokenizer
+  batch_size: 4
+  trust_remote_code: False
+  num_gpus: 2
+  dpo: True
+RLHFlow/ArmoRM-Llama3-8B-v0.1:
+  model: RLHFlow/ArmoRM-Llama3-8B-v0.1
+  tokenizer: RLHFlow/ArmoRM-Llama3-8B-v0.1
+  chat_template: # none for tokenizer
+  batch_size: 4
+  trust_remote_code: True
+  dpo: False
+PKU-Alignment/beaver-7b-v2.0-reward:
+  model: 'PKU-Alignment/beaver-7b-v2.0-reward'
+  tokenizer: 'PKU-Alignment/beaver-7b-v2.0-reward'
+  chat_template: 'pku-align'
+  batch_size: 16
+  trust_remote_code: False
+  dpo: False
+PKU-Alignment/beaver-7b-v2.0-cost:
+  model: 'PKU-Alignment/beaver-7b-v2.0-cost'
+  tokenizer: 'PKU-Alignment/beaver-7b-v2.0-cost'
+  chat_template: 'pku-align'
+  batch_size: 16
+  trust_remote_code: False
+  dpo: False
+# Tulu 2.5 RMs
+allenai/tulu-v2.5-13b-uf-rm:
+  model: allenai/tulu-v2.5-13b-uf-rm
+  tokenizer: allenai/tulu-v2.5-13b-uf-rm
+  chat_template: # none for tokenizer
+  batch_size: 4
+  trust_remote_code: False
+  dpo: False
+allenai/tulu-v2.5-13b-preference-mix-rm:
+  model: allenai/tulu-v2.5-13b-preference-mix-rm
+  tokenizer: allenai/tulu-v2.5-13b-preference-mix-rm
+  chat_template: # none for tokenizer
+  batch_size: 4
+  trust_remote_code: False
+  dpo: False
+allenai/tulu-v2.5-70b-uf-rm:
+  model: allenai/tulu-v2.5-70b-uf-rm
+  tokenizer: allenai/tulu-v2.5-70b-uf-rm
+  chat_template: # none for tokenizer
+  batch_size: 2
+  trust_remote_code: False
+  dpo: False
+allenai/tulu-v2.5-70b-preference-mix-rm:
+  model: allenai/tulu-v2.5-70b-preference-mix-rm
+  tokenizer: allenai/tulu-v2.5-70b-preference-mix-rm
+  chat_template: # none for tokenizer
+  batch_size: 2
   trust_remote_code: False
   dpo: False

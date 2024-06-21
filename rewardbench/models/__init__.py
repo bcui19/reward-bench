@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import torch
 from transformers import (
     AutoModel,
     AutoModelForCausalLM,
@@ -20,15 +21,17 @@ from transformers import (
     LlamaTokenizer,
     MixtralForCausalLM,
     T5ForConditionalGeneration,
-    pipeline,
 )
 
+from .armorm import ArmoRMPipeline
 from .beaver import BeaverCostPipeline, BeaverPipeline, LlamaForScore
 from .betterpairrm import BetterPairRMPipeline
 from .openassistant import *  # noqa
 from .openbmb import LlamaRewardModel, OpenBMBPipeline
 from .pairrm import DebertaV2PairRM, PairRMPipeline
+from .pipeline import RewardBenchPipeline
 from .shp import SHPPipeline
+from .slicpairpm import SlicPairPMPipeline
 from .starling import (
     LlamaForSequenceClassification,
     StarlingPipeline,
@@ -40,7 +43,7 @@ from .ziya import ZiyaPipeline
 REWARD_MODEL_CONFIG = {
     "default": {
         "model_builder": AutoModelForSequenceClassification.from_pretrained,
-        "pipeline_builder": pipeline,
+        "pipeline_builder": RewardBenchPipeline,
         "quantized": True,
         "custom_dialogue": False,
         "model_type": "Seq. Classifier",
@@ -121,6 +124,35 @@ REWARD_MODEL_CONFIG = {
         "quantized": True,
         "custom_dialogue": False,
         "model_type": "Seq. Classifier",
+    },
+    "PKU-Alignment/beaver-7b-v2.0-reward": {
+        "model_builder": LlamaForScore.from_pretrained,
+        "pipeline_builder": BeaverPipeline,
+        "quantized": True,
+        "custom_dialogue": False,
+        "model_type": "Seq. Classifier",
+    },
+    "PKU-Alignment/beaver-7b-v2.0-cost": {
+        "model_builder": LlamaForScore.from_pretrained,
+        "pipeline_builder": BeaverCostPipeline,
+        "quantized": True,
+        "custom_dialogue": False,
+        "model_type": "Seq. Classifier",
+    },
+    "RLHFlow/pair-preference-model-LLaMA3-8B": {
+        "model_builder": AutoModelForCausalLM.from_pretrained,
+        "pipeline_builder": SlicPairPMPipeline,
+        "quantized": True,
+        "custom_dialogue": True,
+        "model_type": "Custom Classifier",
+    },
+    "RLHFlow/ArmoRM-Llama3-8B-v0.1": {
+        "model_builder": AutoModelForSequenceClassification.from_pretrained,
+        "pipeline_builder": ArmoRMPipeline,
+        "quantized": False,
+        "custom_dialogue": True,
+        "model_type": "Custom Classifier",
+        "torch_dtype": torch.bfloat16,
     },
 }
 
