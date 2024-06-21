@@ -141,6 +141,7 @@ def main():
     # handle off-case models
     is_prometheus = False  # handles output tokens differently (less flexible)
     # use different prompt for prometheus/gemini models
+    model_modifier = None
     if "prometheus" in args.model:
         model_modifier = "prometheus"
         is_prometheus = True
