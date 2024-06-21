@@ -200,7 +200,7 @@ def main():
 
             if len(batch["text_chosen"]) <= 4:  # set up only for 1 or 2 turns
                 winner, request, judgement = run_judge_pair(
-                    prompt, answer_a, answer_b, args.model, multi_turn=mult_turn, model_modifier=model_modifier
+                    prompt, answer_a, answer_b, args.model, tokenizer, multi_turn=mult_turn, model_modifier=model_modifier
                 )
                 if debug:
                     print(f"Prompt: {request}")
